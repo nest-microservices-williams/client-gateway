@@ -1,5 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { envs } from './config/envs';
 import { RpcCustomExceptionFilter } from './common/exceptions/rpc-exception.filter';
@@ -7,7 +11,10 @@ import { RpcCustomExceptionFilter } from './common/exceptions/rpc-exception.filt
 async function bootstrap() {
   const logger = new Logger('Main-Gateway');
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
 
   app.setGlobalPrefix('api');
 
