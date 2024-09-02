@@ -19,6 +19,6 @@ export class OrdersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.client.send({ cmd: 'find_order' }, id);
+    return this.client.send({ cmd: 'find_order' }, { id });
   }
 }
