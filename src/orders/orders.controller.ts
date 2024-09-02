@@ -7,6 +7,7 @@ import {
   Inject,
   ParseUUIDPipe,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
@@ -50,5 +51,17 @@ export class OrdersController {
           throw new RpcException(error);
         }),
       );
+  }
+
+  @Patch(':id')
+  changeStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() { status }: StatusDto,
+  ) {
+    return this.client.send({ cmd: 'change_status' }, { id, status }).pipe(
+      catchError((error) => {
+        throw new RpcException(error);
+      }),
+    );
   }
 }
