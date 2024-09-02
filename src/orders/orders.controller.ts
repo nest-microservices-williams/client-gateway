@@ -10,9 +10,10 @@ import {
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { ORDER_SERVICE } from 'src/config/services';
-import { OrderPaginationDto } from './dto';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderPaginationDto, StatusDto } from './dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -28,12 +29,26 @@ export class OrdersController {
     return this.client.send({ cmd: 'find_all_orders' }, orderPaginationDto);
   }
 
-  @Get(':id')
+  @Get('id/:id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.client.send({ cmd: 'find_order' }, { id }).pipe(
       catchError((error) => {
         throw new RpcException(error);
       }),
     );
+  }
+
+  @Get(':status')
+  findByStatus(
+    @Param() { status }: StatusDto,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.client
+      .send({ cmd: 'find_all_orders' }, { status, ...paginationDto })
+      .pipe(
+        catchError((error) => {
+          throw new RpcException(error);
+        }),
+      );
   }
 }
