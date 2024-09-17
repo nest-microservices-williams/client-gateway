@@ -7,8 +7,9 @@ This is the client gateway for the project. It is responsible for handling all t
 1. Clone the repository
 2. Run `npm install`
 3. Create .env from .env.example
-4. Getting microservices up and running (Refer to the README.md of each microservice)
-5. Run `npm run start:dev`
+4. Getting up Nats server
+5. Getting microservices up and running (Refer to the README.md of each microservice)
+6. Run `npm run start:dev`
 
 ## Nats
 
