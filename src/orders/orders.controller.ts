@@ -8,15 +8,17 @@ import {
   ParseUUIDPipe,
   Query,
   Patch,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { catchError } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
+import { ErrorInterceptor } from 'src/common/interceptors/rpc-error.interceptor';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { NATS_SERVICE } from 'src/config/services';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderPaginationDto, StatusDto } from './dto';
 
 @Controller('orders')
+@UseInterceptors(ErrorInterceptor)
 export class OrdersController {
   constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {}
 
@@ -32,11 +34,7 @@ export class OrdersController {
 
   @Get('id/:id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.client.send({ cmd: 'find_order' }, { id }).pipe(
-      catchError((error) => {
-        throw new RpcException(error);
-      }),
-    );
+    return this.client.send({ cmd: 'find_order' }, { id });
   }
 
   @Get(':status')
@@ -44,13 +42,10 @@ export class OrdersController {
     @Param() { status }: StatusDto,
     @Query() paginationDto: PaginationDto,
   ) {
-    return this.client
-      .send({ cmd: 'find_all_orders' }, { status, ...paginationDto })
-      .pipe(
-        catchError((error) => {
-          throw new RpcException(error);
-        }),
-      );
+    return this.client.send(
+      { cmd: 'find_all_orders' },
+      { status, ...paginationDto },
+    );
   }
 
   @Patch(':id')
@@ -58,10 +53,6 @@ export class OrdersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() { status }: StatusDto,
   ) {
-    return this.client.send({ cmd: 'change_status' }, { id, status }).pipe(
-      catchError((error) => {
-        throw new RpcException(error);
-      }),
-    );
+    return this.client.send({ cmd: 'change_status' }, { id, status });
   }
 }
