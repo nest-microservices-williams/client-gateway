@@ -11,9 +11,10 @@ import {
 import type { ClientProxy } from '@nestjs/microservices';
 import { ErrorInterceptor } from 'src/common/interceptors/rpc-error.interceptor';
 import { NATS_SERVICE } from 'src/config/services';
+import type { AuthenticatedUser } from 'src/common/interfaces';
 import { LoginUserDto, RegisterUserDto } from './dto';
 import { AuthGuard } from './guards';
-import { AuthenticatedRequest } from 'src/common/interfaces';
+import { Token, User } from './decorators';
 
 @Controller('auth')
 @UseInterceptors(ErrorInterceptor)
@@ -32,9 +33,8 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Get('verify')
-  async verifyUser(@Req() req: AuthenticatedRequest) {
-    const { user, token } = req;
-
+  async verifyUser(@User() user: AuthenticatedUser, @Token() token: string) {
+    console.log({ user, token });
     return this.client.send('auth.verify.user', {});
   }
 }

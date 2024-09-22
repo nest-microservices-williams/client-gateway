@@ -27,6 +27,10 @@ export class RpcCustomExceptionFilter implements ExceptionFilter {
       return this.handleRpcError(response, rpcError);
     }
 
+    if (this.isExceptionError(rpcError)) {
+      return this.handleExceptionError(response, rpcError);
+    }
+
     if (this.isValidationError(rpcError)) {
       return this.handleValidationError(response, rpcError);
     }
@@ -93,6 +97,40 @@ export class RpcCustomExceptionFilter implements ExceptionFilter {
     return response.status(HttpStatus.BAD_REQUEST).send({
       statusCode: HttpStatus.BAD_REQUEST,
       error: 'Bad Request',
+      message,
+    });
+  }
+
+  private isExceptionError(error: any): error is {
+    response: { message: string | string[]; statusCode: number; error: string };
+  } {
+    return (
+      typeof error === 'object' &&
+      'response' in error &&
+      typeof error.response === 'object' &&
+      'message' in error.response &&
+      'statusCode' in error.response &&
+      'error' in error.response
+    );
+  }
+
+  private handleExceptionError(
+    response: FastifyReply,
+    error: {
+      response: {
+        message: string | string[];
+        statusCode: number;
+        error: string;
+      };
+    },
+  ) {
+    const message: string = Array.isArray(error.response.message)
+      ? error.response.message.join(', ')
+      : error.response.message;
+
+    return response.status(error.response.statusCode).send({
+      statusCode: error.response.statusCode,
+      error: error.response.error,
       message,
     });
   }

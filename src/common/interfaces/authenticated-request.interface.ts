@@ -1,10 +1,7 @@
 import { FastifyRequest } from 'fastify';
+import { AuthenticatedUser } from './';
 
 export interface AuthenticatedRequest extends FastifyRequest {
-  user?: {
-    id: number;
-    email: string;
-    name: string;
-  };
-  token?: string;
+  user: AuthenticatedUser;
+  token: string;
 }
