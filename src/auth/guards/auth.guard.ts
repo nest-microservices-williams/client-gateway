@@ -1,13 +1,19 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthenticatedRequest } from 'src/common/interfaces';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
+import { AuthenticatedRequest, AuthenticatedUser } from 'src/common/interfaces';
+import { NATS_SERVICE } from 'src/config/services';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const token = this.extractTokenFromHeader(request);
@@ -17,14 +23,17 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      // 💡 We're assigning the payload to the request object here
-      // so that we can access it in our route handlers
-      request.user = {
-        id: 1,
-        email: 'williams@google.com',
-        name: 'Williams',
-      };
-      request.token = token;
+      const response = await firstValueFrom<{
+        user: AuthenticatedUser;
+        token: string;
+      }>(this.client.send('auth.verify.token', token));
+
+      if (!response.user || !response.token) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      request.user = response.user;
+      request.token = response.token;
     } catch {
       throw new UnauthorizedException();
     }

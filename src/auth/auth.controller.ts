@@ -34,7 +34,6 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get('verify')
   async verifyUser(@User() user: AuthenticatedUser, @Token() token: string) {
-    console.log({ user, token });
-    return this.client.send('auth.verify.user', {});
+    return { user, token };
   }
 }
